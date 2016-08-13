@@ -104,23 +104,27 @@ update msg model =
             model ! []
 
         LaunchGame ->
-            model ! [ Random.generate StartGame (Random.int 1 100) ]
+            model ! [ launchGame ]
 
         StartGame age ->
-            { model
-                | age = age
-                , trials = 10
-                , entryAge = "1"
-                , submittedAge = -1
-                , submitError = False
-            }
-                ! []
+            start age model ! []
 
         ChangeEntryAge ageStr ->
             { model | entryAge = ageStr } ! []
 
         Submit ->
             submit model ! []
+
+
+start : Int -> Model -> Model
+start age model =
+    { model
+        | age = age
+        , trials = 10
+        , entryAge = "1"
+        , submittedAge = -1
+        , submitError = False
+    }
 
 
 submit : Model -> Model
