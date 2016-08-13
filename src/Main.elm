@@ -21,7 +21,7 @@ main =
 type alias Model =
     { started : Bool
     , age : Int
-    , trials : Int
+    , remainingAttempts : Int
     , entryAge : String
     , submittedAge : Int
     , submitError : Bool
@@ -50,7 +50,7 @@ initModel : Model
 initModel =
     { started = False
     , age = 0
-    , trials = 0
+    , remainingAttempts = 0
     , entryAge = "1"
     , submittedAge = -1
     , submitError = False
@@ -74,7 +74,7 @@ view model =
         div
             []
             [ div []
-                [ text <| "Guess my age (in years)" ++ ", you still have " ++ (toString model.trials) ++ " attempts" ]
+                [ text <| "Guess my age (in years)" ++ ", you still have " ++ (toString model.remainingAttempts) ++ " attempts" ]
             , div []
                 [ input
                     [ value <| model.entryAge
@@ -120,7 +120,7 @@ start : Int -> Model -> Model
 start age model =
     { model
         | age = age
-        , trials = 10
+        , remainingAttempts = 10
         , entryAge = "1"
         , submittedAge = -1
         , submitError = False
@@ -144,7 +144,7 @@ submit model =
         if entryAgeConverted == -1 then
             { model | submitError = True }
         else
-            { model | submittedAge = entryAgeConverted, submitError = False, trials = model.trials - 1 }
+            { model | submittedAge = entryAgeConverted, submitError = False, remainingAttempts = model.remainingAttempts - 1 }
 
 
 subscriptions : Model -> Sub Msg
