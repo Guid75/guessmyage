@@ -6,7 +6,8 @@ The computer challenges you to find its age, and you have 10 attempts.
 Installation:
 
 ```
-elm make src/Main.elm --output elm.js
+$ elm package install
+$ elm make src/Main.elm --output elm.js
 ```
 
 Now, open the `index.html` file with your browser.
