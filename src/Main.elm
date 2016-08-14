@@ -98,7 +98,7 @@ view model =
                     text ""
                 ]
             , if model.submittedAge >= 0 then
-                text tip
+                strong [] [ text tip ]
               else
                 text ""
             , div []
