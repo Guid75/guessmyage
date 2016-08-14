@@ -2,7 +2,7 @@ port module GuessMyAge exposing (..)
 
 import Html exposing (..)
 import Html.App as App
-import Html.Attributes exposing (value, disabled, style, id)
+import Html.Attributes exposing (value, disabled, style, id, class, classList)
 import Html.Events exposing (..)
 import String
 import Random
@@ -24,7 +24,9 @@ type alias Model =
     , age : Int
     , remainingAttempts : Int
     , entryAge : String
-    , submittedAge : Int
+    , youngerThan : Maybe Int
+    , olderThan : Maybe Int
+    , submittedAge : Maybe Int
     , submitError : Bool
     }
 
@@ -43,9 +45,19 @@ init =
     initModel ! [ launchGame ]
 
 
+lowerLimit : Int
+lowerLimit =
+    1
+
+
+higherLimit : Int
+higherLimit =
+    100
+
+
 launchGame : Cmd Msg
 launchGame =
-    Random.generate StartGame (Random.int 1 100)
+    Random.generate StartGame (Random.int lowerLimit higherLimit)
 
 
 initModel : Model
@@ -54,7 +66,9 @@ initModel =
     , age = 0
     , remainingAttempts = 0
     , entryAge = "1"
-    , submittedAge = -1
+    , youngerThan = Nothing
+    , olderThan = Nothing
+    , submittedAge = Nothing
     , submitError = False
     }
 
@@ -67,22 +81,43 @@ onKeyUp tagger =
 view : Model -> Html Msg
 view model =
     let
-        finished =
-            model.submittedAge == model.age
+        success =
+            Maybe.withDefault -1 model.submittedAge == model.age
 
-        tip =
-            if model.submittedAge > model.age then
-                "I'm younger than " ++ (toString model.submittedAge)
-            else if model.submittedAge < model.age then
-                "I'm older than " ++ (toString model.submittedAge)
+        finished =
+            success || model.remainingAttempts == 0
+
+        tip age =
+            if success then
+                (toString <| model.age) ++ " is my age! Congratulations!"
+            else if finished then
+                "You failed to guess my age, I'm " ++ (toString <| model.age) ++ " years old! Please, try again!"
+            else if model.youngerThan /= Nothing && model.olderThan /= Nothing then
+                "I'm older than "
+                    ++ (toString <| Maybe.withDefault -1 model.olderThan)
+                    ++ " and younger than "
+                    ++ (toString <| Maybe.withDefault -1 model.youngerThan)
+            else if model.youngerThan /= Nothing then
+                "I'm younger than " ++ (toString <| Maybe.withDefault -1 model.youngerThan)
+            else if model.olderThan /= Nothing then
+                "I'm older than " ++ (toString <| Maybe.withDefault -1 model.olderThan)
             else
-                (toString model.submittedAge) ++ " is my age! Congratulations!"
+                ""
+
+        forgeTip =
+            case model.submittedAge of
+                Nothing ->
+                    text ""
+
+                Just age ->
+                    div [ class "tip" ] [ strong [] [ text <| tip age ] ]
     in
         div
-            []
-            [ div []
+            [ classList [ ( "content", True ), ( "success", success ), ( "failure", finished && not success ) ]
+            ]
+            [ div [ class "title" ]
                 [ text <| "Guess my age (in years)" ++ ", you still have " ++ (toString model.remainingAttempts) ++ " attempts" ]
-            , div []
+            , div [ class "input" ]
                 [ input
                     [ id "entry"
                     , value <| model.entryAge
@@ -97,12 +132,9 @@ view model =
                   else
                     text ""
                 ]
-            , if model.submittedAge >= 0 then
-                strong [] [ text tip ]
-              else
-                text ""
-            , div []
-                [ button [ style [ ( "margin-top", "10px" ) ], onClick LaunchGame ] [ text "New game" ] ]
+            , forgeTip
+            , div [ class "button" ]
+                [ button [ style [ ( "margin-top", "10px" ) ], onClick LaunchGame ] [ text "New game (with another dude)" ] ]
             ]
 
 
@@ -137,7 +169,9 @@ start age model =
         | age = age
         , remainingAttempts = 10
         , entryAge = "1"
-        , submittedAge = -1
+        , submittedAge = Nothing
+        , youngerThan = Nothing
+        , olderThan = Nothing
         , submitError = False
     }
 
@@ -159,7 +193,38 @@ submit model =
         if entryAgeConverted == -1 then
             { model | submitError = True } ! [ focus "#entry" ]
         else
-            { model | submittedAge = entryAgeConverted, submitError = False, remainingAttempts = model.remainingAttempts - 1 } ! [ focus "#entry" ]
+            { model
+                | submittedAge = Just entryAgeConverted
+                , youngerThan = updateYoungerThan entryAgeConverted model
+                , olderThan = updateOlderThan entryAgeConverted model
+                , submitError = False
+                , remainingAttempts = model.remainingAttempts - 1
+            }
+                ! [ focus "#entry" ]
+
+
+updateYoungerThan : Int -> Model -> Maybe Int
+updateYoungerThan age model =
+    let
+        youngerThan =
+            Maybe.withDefault (higherLimit + 1) model.youngerThan
+    in
+        if age < youngerThan && age >= model.age then
+            Just age
+        else
+            model.youngerThan
+
+
+updateOlderThan : Int -> Model -> Maybe Int
+updateOlderThan age model =
+    let
+        olderThan =
+            Maybe.withDefault (lowerLimit - 1) model.olderThan
+    in
+        if age > olderThan && age <= model.age then
+            Just age
+        else
+            model.olderThan
 
 
 subscriptions : Model -> Sub Msg
