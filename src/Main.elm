@@ -2,10 +2,11 @@ port module GuessMyAge exposing (..)
 
 import Html exposing (..)
 import Html.App as App
-import Html.Attributes exposing (value, disabled, style)
+import Html.Attributes exposing (value, disabled, style, id)
 import Html.Events exposing (..)
 import String
 import Random
+import Json.Decode as Json
 
 
 main : Program Never
@@ -34,6 +35,7 @@ type Msg
     | StartGame Int
     | Submit
     | ChangeEntryAge String
+    | EntryKeyUp Int
 
 
 init : ( Model, Cmd Msg )
@@ -57,6 +59,11 @@ initModel =
     }
 
 
+onKeyUp : (Int -> msg) -> Attribute msg
+onKeyUp tagger =
+    on "keyup" (Json.map tagger keyCode)
+
+
 view : Model -> Html Msg
 view model =
     let
@@ -77,8 +84,10 @@ view model =
                 [ text <| "Guess my age (in years)" ++ ", you still have " ++ (toString model.remainingAttempts) ++ " attempts" ]
             , div []
                 [ input
-                    [ value <| model.entryAge
+                    [ id "entry"
+                    , value <| model.entryAge
                     , onInput ChangeEntryAge
+                    , onKeyUp EntryKeyUp
                     , disabled finished
                     ]
                     []
@@ -107,13 +116,19 @@ update msg model =
             model ! [ launchGame ]
 
         StartGame age ->
-            start age model ! []
+            start age model ! [ focus "#entry" ]
 
         ChangeEntryAge ageStr ->
             { model | entryAge = ageStr } ! []
 
+        EntryKeyUp key ->
+            if key == 13 then
+                submit model
+            else
+                model ! []
+
         Submit ->
-            submit model ! []
+            submit model
 
 
 start : Int -> Model -> Model
@@ -127,7 +142,7 @@ start age model =
     }
 
 
-submit : Model -> Model
+submit : Model -> ( Model, Cmd Msg )
 submit model =
     let
         entryAgeConverted =
@@ -142,11 +157,14 @@ submit model =
                     -1
     in
         if entryAgeConverted == -1 then
-            { model | submitError = True }
+            { model | submitError = True } ! [ focus "#entry" ]
         else
-            { model | submittedAge = entryAgeConverted, submitError = False, remainingAttempts = model.remainingAttempts - 1 }
+            { model | submittedAge = entryAgeConverted, submitError = False, remainingAttempts = model.remainingAttempts - 1 } ! [ focus "#entry" ]
 
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.none
+
+
+port focus : String -> Cmd msg

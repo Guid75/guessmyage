@@ -9,5 +9,17 @@
 
     <script type="text/javascript">
      var myapp = Elm.GuessMyAge.fullscreen();
+
+     myapp.ports.focus.subscribe(function(selector) {
+       setTimeout(function() {
+          var nodes = document.querySelectorAll(selector);
+          if (nodes.length === 1) {
+            if (document.activeElement !== nodes[0]) {
+              nodes[0].focus();
+            }
+            nodes[0].select();
+          }
+      }, 50);
+     });
     </script>
 </html>
