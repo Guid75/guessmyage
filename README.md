@@ -10,4 +10,4 @@ $ elm package install
 $ elm make src/Main.elm --output elm.js
 ```
 
-Just open the `index.html` file with your browser.
+Just open the `index.html` file in your browser.
