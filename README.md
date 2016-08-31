@@ -12,6 +12,8 @@ $ elm make src/Main.elm --output elm.js
 
 Just open the `index.html` file in your browser.
 
+You should see something that looks like the following screenshots.
+
 ![start](/images/start.png)
 ![success](/images/success.png)
 ![failure](/images/failure.png)
