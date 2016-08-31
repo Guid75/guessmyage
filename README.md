@@ -3,7 +3,11 @@ An Elm (>= 0.17 only) version of "guess my age"
 
 The computer challenges you to find its age, and you have 10 attempts.
 
-Installation:
+# Just wanna try?
+
+https://guid75.github.io/guessmyage/
+
+# Local installation
 
 ```
 $ elm package install
