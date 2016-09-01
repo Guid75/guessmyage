@@ -2,7 +2,7 @@ port module GuessMyAge exposing (..)
 
 import Html exposing (..)
 import Html.App as App
-import Html.Attributes exposing (value, disabled, style, id, class, classList, type', checked)
+import Html.Attributes exposing (value, disabled, style, id, class, classList, type', checked, step)
 import Html.Events exposing (..)
 import String
 import Random
@@ -147,6 +147,8 @@ view model =
                     , onInput ChangeEntryAge
                     , onKeyUp EntryKeyUp
                     , disabled finished
+                    , type' "number"
+                    , step "1"
                     ]
                     []
                 , button [ onClick Submit, disabled finished ] [ text "submit" ]
