@@ -149,6 +149,8 @@ view model =
                     , disabled finished
                     , type' "number"
                     , step "1"
+                    , Html.Attributes.min (toString lowerLimit)
+                    , Html.Attributes.max (toString higherLimit)
                     ]
                     []
                 , button [ onClick Submit, disabled finished ] [ text "submit" ]
