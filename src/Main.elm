@@ -2,7 +2,7 @@ port module GuessMyAge exposing (..)
 
 import Html exposing (..)
 import Html.App as App
-import Html.Attributes exposing (value, disabled, style, id, class, classList)
+import Html.Attributes exposing (value, disabled, style, id, class, classList, type', checked)
 import Html.Events exposing (..)
 import String
 import Random
@@ -28,6 +28,7 @@ type alias Model =
     , olderThan : Maybe Int
     , submittedAge : Maybe Int
     , submitError : Bool
+    , easyMode : Bool
     }
 
 
@@ -38,6 +39,7 @@ type Msg
     | Submit
     | ChangeEntryAge String
     | EntryKeyUp Int
+    | CheckEasy Bool
 
 
 init : ( Model, Cmd Msg )
@@ -70,6 +72,7 @@ initModel =
     , olderThan = Nothing
     , submittedAge = Nothing
     , submitError = False
+    , easyMode = False
     }
 
 
@@ -81,13 +84,17 @@ onKeyUp tagger =
 view : Model -> Html Msg
 view model =
     let
+        submittedAge =
+            Maybe.withDefault -1 model.submittedAge
+
         success =
-            Maybe.withDefault -1 model.submittedAge == model.age
+            submittedAge == model.age
 
         finished =
             success || model.remainingAttempts == 0
 
-        tip age =
+        easyTip : String
+        easyTip =
             if success then
                 (toString <| model.age) ++ " is my age! Congratulations!"
             else if finished then
@@ -104,13 +111,29 @@ view model =
             else
                 ""
 
-        forgeTip =
-            case model.submittedAge of
-                Nothing ->
-                    text ""
+        hardTip : String
+        hardTip =
+            if success then
+                (toString <| model.age) ++ " is my age! Congratulations!"
+            else if finished then
+                "You failed to guess my age, I'm " ++ (toString <| model.age) ++ " years old! Please, try again!"
+            else if submittedAge < model.age then
+                "I'm older than " ++ (toString submittedAge)
+            else
+                "I'm younger than " ++ (toString submittedAge)
 
-                Just age ->
-                    div [ class "tip" ] [ strong [] [ text <| tip age ] ]
+        tip : String
+        tip =
+            if model.easyMode then
+                easyTip
+            else
+                hardTip
+
+        forgeTip =
+            if model.submittedAge /= Nothing then
+                div [ class "tip" ] [ strong [] [ text <| tip ] ]
+            else
+                text ""
     in
         div
             [ classList [ ( "content", True ), ( "success", success ), ( "failure", finished && not success ) ]
@@ -133,8 +156,18 @@ view model =
                     text ""
                 ]
             , forgeTip
-            , div [ class "button" ]
+            , div
+                [ class "button" ]
                 [ button [ style [ ( "margin-top", "10px" ) ], onClick LaunchGame ] [ text "New game (with another dude)" ] ]
+            , label []
+                [ input
+                    [ type' "checkbox"
+                    , checked model.easyMode
+                    , onCheck CheckEasy
+                    ]
+                    []
+                , text "Easy mode (better tips)"
+                ]
             ]
 
 
@@ -161,6 +194,9 @@ update msg model =
 
         Submit ->
             submit model
+
+        CheckEasy easyMode ->
+            { model | easyMode = easyMode } ! []
 
 
 start : Int -> Model -> Model
