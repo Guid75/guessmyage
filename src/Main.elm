@@ -181,7 +181,7 @@ focusAndSelect : String -> Cmd Msg
 focusAndSelect id =
     Cmd.batch
         [ Task.perform (always NoOp) (always NoOp) (Dom.focus id)
-        , select <| "#" ++ id
+        , select id
         ]
 
 
