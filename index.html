@@ -41,14 +41,11 @@
     <script type="text/javascript">
      var myapp = Elm.GuessMyAge.fullscreen();
 
-     myapp.ports.focus.subscribe(function(selector) {
+     myapp.ports.select.subscribe(function(selector) {
        setTimeout(function() {
           var nodes = document.querySelectorAll(selector);
           if (nodes.length === 1) {
             var node = nodes[0];
-            if (document.activeElement !== node) {
-              node.focus();
-            }
             if (typeof node.select === 'function') {
               node.select();
             }

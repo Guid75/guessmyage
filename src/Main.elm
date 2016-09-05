@@ -7,6 +7,8 @@ import Html.Events exposing (..)
 import String
 import Random
 import Json.Decode as Json
+import Task
+import Dom
 
 
 main : Program Never
@@ -26,7 +28,7 @@ type alias Model =
     , entryAge : String
     , youngerThan : Maybe Int
     , olderThan : Maybe Int
-    , submittedAge : Maybe Int
+    , lastSubmittedAge : Maybe Int
     , submitError : Bool
     , easyMode : Bool
     }
@@ -70,7 +72,7 @@ initModel =
     , entryAge = "1"
     , youngerThan = Nothing
     , olderThan = Nothing
-    , submittedAge = Nothing
+    , lastSubmittedAge = Nothing
     , submitError = False
     , easyMode = False
     }
@@ -85,7 +87,7 @@ view : Model -> Html Msg
 view model =
     let
         submittedAge =
-            Maybe.withDefault -1 model.submittedAge
+            Maybe.withDefault -1 model.lastSubmittedAge
 
         success =
             submittedAge == model.age
@@ -130,7 +132,7 @@ view model =
                 hardTip
 
         forgeTip =
-            if model.submittedAge /= Nothing then
+            if model.lastSubmittedAge /= Nothing then
                 div [ class "tip" ] [ strong [] [ text <| tip ] ]
             else
                 text ""
@@ -175,6 +177,14 @@ view model =
             ]
 
 
+focusAndSelect : String -> Cmd Msg
+focusAndSelect id =
+    Cmd.batch
+        [ Task.perform (always NoOp) (always NoOp) (Dom.focus id)
+        , select <| "#" ++ id
+        ]
+
+
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
@@ -185,7 +195,7 @@ update msg model =
             model ! [ launchGame ]
 
         StartGame age ->
-            start age model ! [ focus "#entry" ]
+            start age model ! [ focusAndSelect "entry" ]
 
         ChangeEntryAge ageStr ->
             { model | entryAge = ageStr } ! []
@@ -209,7 +219,7 @@ start age model =
         | age = age
         , remainingAttempts = 10
         , entryAge = "1"
-        , submittedAge = Nothing
+        , lastSubmittedAge = Nothing
         , youngerThan = Nothing
         , olderThan = Nothing
         , submitError = False
@@ -231,16 +241,16 @@ submit model =
                     -1
     in
         if entryAgeConverted == -1 then
-            { model | submitError = True } ! [ focus "#entry" ]
+            { model | submitError = True } ! [ focusAndSelect "entry" ]
         else
             { model
-                | submittedAge = Just entryAgeConverted
+                | lastSubmittedAge = Just entryAgeConverted
                 , youngerThan = updateYoungerThan entryAgeConverted model
                 , olderThan = updateOlderThan entryAgeConverted model
                 , submitError = False
                 , remainingAttempts = model.remainingAttempts - 1
             }
-                ! [ focus "#entry" ]
+                ! [ focusAndSelect "entry" ]
 
 
 updateYoungerThan : Int -> Model -> Maybe Int
@@ -272,4 +282,4 @@ subscriptions model =
     Sub.none
 
 
-port focus : String -> Cmd msg
+port select : String -> Cmd msg
